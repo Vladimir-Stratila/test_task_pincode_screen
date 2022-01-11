@@ -9,16 +9,11 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   var numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
   var inputText = "";
+  var checkText = "";
   var actives = [false, false, false, false];
   var clears = [false, false, false, false];
-  var values = [1, 2, 3, 4];
+  var values = [-1, -1, -1, -1];
   var currentIndex = 0;
-  var message = "";
-
-  late int pinDigit1;
-  late int pinDigit2;
-  late int pinDigit3;
-  late int pinDigit4;
 
   @override
   void initState() {
@@ -29,10 +24,7 @@ class _AuthScreenState extends State<AuthScreen> {
   void loadPIN()async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      pinDigit1 = (prefs.getInt('pinDigit1') ?? -1);
-      pinDigit2 = (prefs.getInt('pinDigit2') ?? -1);
-      pinDigit3 = (prefs.getInt('pinDigit3') ?? -1);
-      pinDigit4 = (prefs.getInt('pinDigit4') ?? -1);
+      checkText = (prefs.getString('pinCode') ?? "");
     });
   }
 
@@ -72,19 +64,13 @@ class _AuthScreenState extends State<AuthScreen> {
                     ],
                   ),
                 ),
-                Text(
-                    message,
-                    style: TextStyle(
-                      fontSize: 20
-                    )
-                ),
               ],
             )
           ),
           Expanded(
             flex: 5,
             child: GridView.builder(
-              padding: EdgeInsets.all(48.0),
+              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal:48.0),
               physics: NeverScrollableScrollPhysics(),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
@@ -121,29 +107,51 @@ class _AuthScreenState extends State<AuthScreen> {
                                   clears = clears.map((e) => true).toList();
                                   actives = actives.map((e) => false).toList();
                                 });
-                                if (inputText == "0715") {
-                                  print("Success");
+                                if (inputText == checkText) {
                                   setState(() {
-                                    message = "Success";
+                                    showDialog<String>(
+                                      context: context,
+                                      builder: (BuildContext context) => AlertDialog(
+                                        title: const Text('Success'),
+                                        content: const Text('Authentication success.'),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context, 'OK'),
+                                            child: const Text('OK'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
                                   });
                                 }
                                 else {
                                   setState(() {
-                                    message = "Forgot PIN?";
+                                    showDialog<String>(
+                                      context: context,
+                                      builder: (BuildContext context) => AlertDialog(
+                                        title: const Text('Error'),
+                                        content: const Text('Authentication failed. Try again.'),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context, 'OK'),
+                                            child: const Text('OK'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
                                   });
                                 }
                                 inputText = "";
                                 currentIndex = 0;
                                 return;
                               }
-                              message = "";
                               clears = clears.map((e) => false).toList();
                               setState(() {
                                 actives[currentIndex] = true;
                                 currentIndex++;
                               });
                             },
-                            color: Colors.orangeAccent,
+                            color: Colors.white54,
                             minWidth: 56,
                             height: 56,
                             child: index == 11
@@ -185,7 +193,6 @@ class _AnimationBoxItemState extends State<AnimationBoxItem> with TickerProvider
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     animationController = AnimationController(vsync: this, duration: Duration(milliseconds: 600));
   }
@@ -198,17 +205,20 @@ class _AnimationBoxItemState extends State<AnimationBoxItem> with TickerProvider
       animation: animationController,
       builder: (context, child) => Container(
         margin: EdgeInsets.all(8.0),
-        //color: Colors.red,
         child: Stack(
           children: [
             Container(),
             AnimatedContainer(
               duration: Duration(milliseconds: 800),
-              width: 10.0,
-              height: 10.0,
+              width: 16.0,
+              height: 16.0,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: widget.active ? Colors.blue : Colors.black12,
+                border: Border.all(
+                  color: Colors.black,
+                  width: 1,
+                ),
+                color: widget.active ? Colors.blue : Colors.white70,
               ),
             ),
             Align(
@@ -216,11 +226,15 @@ class _AnimationBoxItemState extends State<AnimationBoxItem> with TickerProvider
               child: Opacity(
                 opacity: 1 - animationController.value,
                 child: Container(
-                  width: 10.0,
-                  height: 10.0,
+                  width: 16.0,
+                  height: 16.0,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: widget.active ? Colors.blue : Colors.black12,
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 1,
+                    ),
+                    color: widget.active ? Colors.blue : Colors.white70,
                   ),
                 ),
               ),

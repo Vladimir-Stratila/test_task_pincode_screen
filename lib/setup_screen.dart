@@ -9,24 +9,17 @@ class SetupScreen extends StatefulWidget {
 class _SetupScreenState extends State<SetupScreen> {
   var numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
   var inputText = "";
+  var checkText = "";
   var actives = [false, false, false, false];
   var clears = [false, false, false, false];
-  var values = [1, 2, 3, 4];
+  var values = [-1, -1, -1, -1];
   var currentIndex = 0;
-  var message = "";
-
-  late int pinDigit1;
-  late int pinDigit2;
-  late int pinDigit3;
-  late int pinDigit4;
+  var title = "Create PIN";
 
   void savePIN() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      prefs.setInt('pinDigit1', pinDigit1);
-      prefs.setInt('pinDigit2', pinDigit2);
-      prefs.setInt('pinDigit3', pinDigit3);
-      prefs.setInt('pinDigit4', pinDigit4);
+      prefs.setString('pinCode', checkText);
     });
   }
 
@@ -46,7 +39,7 @@ class _SetupScreenState extends State<SetupScreen> {
               children: [
                 SizedBox(height: 48.0),
                 Text(
-                    "Enter your PIN",
+                    title,
                     style: TextStyle(
                       fontSize: 24
                     )
@@ -67,28 +60,19 @@ class _SetupScreenState extends State<SetupScreen> {
                     ],
                   ),
                 ),
-                Text(
-                    message,
-                    style: TextStyle(
-                      fontSize: 20
-                    )
-                ),
               ],
             )
           ),
           Expanded(
             flex: 5,
             child: GridView.builder(
-              padding: EdgeInsets.all(48.0),
+              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal:48.0),
               physics: NeverScrollableScrollPhysics(),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 childAspectRatio: 1 / 1,
               ),
                       itemBuilder: (context, index) => Container(
-                        //margin: EdgeInsets.all(16.0),
-                        //width: 50,
-                        //height: 50,
                         child: index == 9
                             ? SizedBox()
                             : Center(
@@ -119,29 +103,67 @@ class _SetupScreenState extends State<SetupScreen> {
                                   clears = clears.map((e) => true).toList();
                                   actives = actives.map((e) => false).toList();
                                 });
-                                if (inputText == "0715") {
-                                  print("Success");
+                                if (checkText == "") {
                                   setState(() {
-                                    message = "Success";
+                                    checkText = inputText;
+                                    title = "Re-enter your PIN";
                                   });
                                 }
                                 else {
-                                  setState(() {
-                                    message = "Forgot PIN?";
-                                  });
+                                  if (checkText == inputText) {
+                                    print("PIN created");
+                                    print(checkText);
+                                    setState(() {
+                                      savePIN();
+                                      showDialog<String>(
+                                        context: context,
+                                        builder: (BuildContext context) => AlertDialog(
+                                          title: const Text('Success'),
+                                          content: const Text('Your PIN code is successfully created.'),
+                                          actions: <Widget>[
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context, 'OK'),
+                                              child: const Text('OK'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                      title="Create PIN";
+                                      //message = "Your PIN code is successfully created";
+                                    });
+                                  }
+                                  else {
+                                    print("PINs are not identical");
+                                    setState(() {
+                                      showDialog<String>(
+                                        context: context,
+                                        builder: (BuildContext context) => AlertDialog(
+                                          title: const Text('Error'),
+                                          content: const Text('PINs are not identical. Try again.'),
+                                          actions: <Widget>[
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context, 'OK'),
+                                              child: const Text('OK'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                      title = "Create PIN";
+                                      checkText = "";
+                                    });
+                                  }
                                 }
                                 inputText = "";
                                 currentIndex = 0;
                                 return;
                               }
-                              message = "";
                               clears = clears.map((e) => false).toList();
                               setState(() {
                                 actives[currentIndex] = true;
                                 currentIndex++;
                               });
                             },
-                            color: Colors.orangeAccent,
+                            color: Colors.white24,
                             minWidth: 56,
                             height: 56,
                             child: index == 11
@@ -173,6 +195,7 @@ class AnimationBoxItem extends StatefulWidget {
   final clear;
   final active;
   final value;
+
   const AnimationBoxItem({Key? key, this.clear = false, this.active = false, this.value}) : super(key: key);
   @override
   _AnimationBoxItemState createState() => _AnimationBoxItemState();
@@ -195,17 +218,20 @@ class _AnimationBoxItemState extends State<AnimationBoxItem> with TickerProvider
       animation: animationController,
       builder: (context, child) => Container(
         margin: EdgeInsets.all(8.0),
-        //color: Colors.red,
         child: Stack(
           children: [
             Container(),
             AnimatedContainer(
               duration: Duration(milliseconds: 800),
-              width: 10.0,
-              height: 10.0,
+              width: 16.0,
+              height: 16.0,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: widget.active ? Colors.blue : Colors.black12,
+                border: Border.all(
+                  color: Colors.black,
+                  width: 1,
+                ),
+                color: widget.active ? Colors.blue : Colors.white70,
               ),
             ),
             Align(
@@ -213,11 +239,15 @@ class _AnimationBoxItemState extends State<AnimationBoxItem> with TickerProvider
               child: Opacity(
                 opacity: 1 - animationController.value,
                 child: Container(
-                  width: 10.0,
-                  height: 10.0,
+                  width: 16.0,
+                  height: 16.0,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: widget.active ? Colors.blue : Colors.black12,
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 1,
+                    ),
+                    color: widget.active ? Colors.blue : Colors.white70,
                   ),
                 ),
               ),
